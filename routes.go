@@ -19,9 +19,15 @@ var routes = Routes{
 		HandlerFunction: Index,
 	},
 	Route{
-		Name:            "ProcessQuery",
+		Name:            "StoreQuery",
 		Path:            "/query",
 		Methods:         "POST",
 		HandlerFunction: StoreQuery,
+	},
+	Route{
+		Name:            "FetchCache",
+		Path:            "/query",
+		Methods:         "GET/{user_id}/{time}/{count}",
+		HandlerFunction: FetchCache,
 	},
 }
