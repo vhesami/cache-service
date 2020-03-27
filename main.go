@@ -12,7 +12,7 @@ func main() {
 	port := os.Getenv("PORT")
 	esUrl := os.Getenv("ES_URL")
 
-	fmt.Printf("ENV : {\n\tPORT:%s,\n\tES_URL:%s\n}\n", port, esUrl)
+	fmt.Printf("ENV : {\r\n\tPORT:%s,\r\n\tES_URL:%s\r\n}\r\n", port, esUrl)
 
 	router := NewMuxRouter()
 	InitializeElasticSearchEnvironment(esUrl)

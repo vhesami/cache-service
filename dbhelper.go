@@ -24,7 +24,10 @@ func InitializeElasticSearchEnvironment(elasticUrl string) {
 	})
 	createIndex(instance)
 }
-func StoreCache(client *elastic.Client, request StoreRequest) int {
+func GetElasticClient() *elastic.Client {
+	return instance
+}
+func StoreCache(client *elastic.Client, request StoreRequest) map[string]Token {
 	tokens := tokenize(client, request)
 
 	var tokensMap map[string]Token
@@ -41,10 +44,8 @@ func StoreCache(client *elastic.Client, request StoreRequest) int {
 	}
 	return indexTokens(client, tokensMap)
 }
-func GetElasticClient() *elastic.Client {
-	return instance
-}
 func RetrieveCache(client *elastic.Client, request RetrieveRequest) string {
+	request.Compact()
 	boolQuery := createFetchQuery(request)
 	searchService := client.
 		Search().
@@ -54,24 +55,24 @@ func RetrieveCache(client *elastic.Client, request RetrieveRequest) string {
 		Sort("occurs", false)
 	searchResult, err := searchService.Do(context.Background())
 	if err != nil {
-		log.Fatalf("retrieve() ERROR: %v", err)
+		log.Fatalf("retrieve() ERROR: %v\r\n", err)
 	}
 	csv := toCsv(searchResult, request.Delimiter)
 	return csv
 }
 
-//---- InitializeEnvironment subroutines -
+//---- InitializeEnvironment subroutines ---------------------------
 func newElasticClient(elasticUrl string) *elastic.Client {
 	client, err := elastic.NewClient(elastic.SetURL(elasticUrl))
 	if err != nil {
-		log.Fatalf("NewElasticClient() ERROR: %v", err)
+		log.Fatalf("NewElasticClient() ERROR: %v\r\n", err)
 	}
 	return client
 }
 func createIndex(client *elastic.Client) {
 	exists, err := client.IndexExists(indexName).Do(context.Background())
 	if err != nil {
-		log.Fatalf("createIndex() ERROR: %v", err)
+		log.Fatalf("createIndex() ERROR: %v\r\n", err)
 	}
 	if !exists {
 		response, err := client.
@@ -87,19 +88,19 @@ func createIndex(client *elastic.Client) {
 						  }}`).
 			Do(context.Background())
 		if err != nil {
-			log.Fatalf("createIndex() ERROR: %v", err)
+			log.Fatalf("createIndex() ERROR: %v\r\n", err)
 		}
 		if !response.Acknowledged {
-			log.Fatalf("Could not create index '%s'", indexName)
+			log.Fatalf("Could not create index '%s'\r\n", indexName)
 		}
 	}
 }
 
-//---- StoreCache subroutines -----------
+//---- StoreCache subroutines ---------------------------------------
 func callTokenizeService(client *elastic.Client, jsonBody string) []string {
 	response, err := client.IndexAnalyze().BodyString(jsonBody).Do(context.Background())
 	if err != nil {
-		log.Panicf("callTokenizeService() ERROR: %v", err)
+		log.Panicf("callTokenizeService() ERROR: %v\r\n", err)
 	}
 	var tokens []string
 	tokens = make([]string, len(response.Tokens))
@@ -135,7 +136,7 @@ func fetchTokenOccurs(client *elastic.Client, documentId string) *int64 {
 	}
 	return occurs
 }
-func indexTokens(client *elastic.Client, tokensMap map[string]Token) int {
+func indexTokens(client *elastic.Client, tokensMap map[string]Token) map[string]Token {
 	bulk := client.Bulk().Index(indexName)
 	for id, token := range tokensMap {
 		item := elastic.NewBulkIndexRequest().Index(indexName).Id(id).OpType("index").Doc(token)
@@ -143,16 +144,16 @@ func indexTokens(client *elastic.Client, tokensMap map[string]Token) int {
 	}
 	response, err := bulk.Do(context.Background())
 	if err != nil {
-		log.Panicf("indexTokens() ERROR: %v", err)
+		log.Panicf("indexTokens() ERROR: %v\r\n", err)
 	}
 	if response.Errors {
-		log.Panicf("indexTokens() ERROR: %v", response.Items)
+		log.Panicf("indexTokens() ERROR: %v\r\n", response.Items)
 	}
 	_, _ = client.Flush(indexName).WaitIfOngoing(true).Do(context.Background())
-	return len(tokensMap)
+	return tokensMap
 }
 
-//---- RetrieveCache subroutines --------
+//---- RetrieveCache subroutines --------------------------------------
 func createFetchQuery(query RetrieveRequest) *elastic.BoolQuery {
 	boolQuery := elastic.NewBoolQuery()
 	userQuery := elastic.NewMatchQuery("user_id", query.UserId)
@@ -175,7 +176,7 @@ func toCsv(searchResult *elastic.SearchResult, delimiter string) string {
 		var token Token
 		err := json.Unmarshal(hit.Source, &token)
 		if err != nil {
-			log.Printf("toCsv() ERROR: %v", err)
+			log.Printf("toCsv() ERROR: %v\r\n", err)
 		}
 		tokens = append(tokens, token.Token)
 	}
