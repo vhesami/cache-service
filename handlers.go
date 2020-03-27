@@ -54,6 +54,7 @@ func RetrieveHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(422) // unprocessable entity
 	}
 
+	request.Compact()
 	client := GetElasticClient()
 	csv := RetrieveCache(client, request)
 

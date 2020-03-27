@@ -56,7 +56,7 @@ func RetrieveCache(client *elastic.Client, request RetrieveRequest) string {
 	if err != nil {
 		log.Fatalf("retrieve() ERROR: %v", err)
 	}
-	csv := toCsv(searchResult)
+	csv := toCsv(searchResult, request.Delimiter)
 	return csv
 }
 
@@ -156,8 +156,8 @@ func indexTokens(client *elastic.Client, tokensMap map[string]Token) int {
 func createFetchQuery(query RetrieveRequest) *elastic.BoolQuery {
 	boolQuery := elastic.NewBoolQuery()
 	userQuery := elastic.NewMatchQuery("user_id", query.UserId)
-	if query.Type > 0 {
-		keywordQuery := elastic.NewMatchQuery("is_keyword", query.Type == 2)
+	if query.Type != BOTH {
+		keywordQuery := elastic.NewMatchQuery("is_keyword", query.Type == KEYWORD)
 		boolQuery.Must(userQuery, keywordQuery)
 	} else {
 		boolQuery.Must(userQuery)
@@ -167,7 +167,7 @@ func createFetchQuery(query RetrieveRequest) *elastic.BoolQuery {
 	boolQuery.Filter(elastic.NewRangeQuery("last_update").Gte(from))
 	return boolQuery
 }
-func toCsv(searchResult *elastic.SearchResult) string {
+func toCsv(searchResult *elastic.SearchResult, delimiter string) string {
 	csv := ""
 	var tokens []string
 
@@ -180,7 +180,7 @@ func toCsv(searchResult *elastic.SearchResult) string {
 		tokens = append(tokens, token.Token)
 	}
 	if len(tokens) > 0 {
-		csv = strings.Join(tokens, ",")
+		csv = strings.Join(tokens, delimiter)
 	}
 	return csv
 }
