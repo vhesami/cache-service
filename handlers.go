@@ -5,59 +5,58 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 )
 
-func Index(w http.ResponseWriter, r *http.Request) {
-	_, _ = fmt.Fprintln(w, time.Now().Format("2006-01-02 15:04:05.000"))
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	_, _ = fmt.Fprintf(w, "IP: %s and Time: %s", r.RemoteAddr, time.Now().Format("2006-01-02 15:04:05.000"))
 }
+func StoreHandler(w http.ResponseWriter, r *http.Request) {
+	var request StoreRequest
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-func StoreQuery(w http.ResponseWriter, r *http.Request) {
-	var query UserQuery
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 	if err != nil {
-		panic(err)
+		log.Panicf("StoreHandler() ERROR: %v", err)
 	}
 	if err := r.Body.Close(); err != nil {
-		panic(err)
+		log.Panicf("StoreHandler() ERROR: %v", err)
 	}
-	if err := json.Unmarshal(body, &query); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	if err := json.Unmarshal(body, &request); err != nil {
 		w.WriteHeader(422) // unprocessable entity
 		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
+			log.Printf("StoreHandler() ERROR: %v", err)
 		}
 	}
 
-	//t := RepoCreateTodo(todo)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	client := GetElasticClient()
+	count := StoreCache(client, request)
+	response := StoreResponse{Success: true, StoredTokenCount: count}
 	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(query); err != nil {
-		panic(err)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("StoreHandler() ERROR: %v", err)
 	}
 }
-func FetchCache(w http.ResponseWriter, r *http.Request) {
-	var query UserQuery
+func RetrieveHandler(w http.ResponseWriter, r *http.Request) {
+	var request RetrieveRequest
+	w.Header().Set("Content-Type", "plain/text; charset=UTF-8")
+
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 	if err != nil {
-		panic(err)
+		log.Panicf("RetrieveHandler() ERROR: %v", err)
 	}
 	if err := r.Body.Close(); err != nil {
-		panic(err)
+		log.Panicf("RetrieveHandler() ERROR: %v", err)
 	}
-	if err := json.Unmarshal(body, &query); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	if err := json.Unmarshal(body, &request); err != nil {
 		w.WriteHeader(422) // unprocessable entity
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
 	}
 
-	//t := RepoCreateTodo(todo)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(query); err != nil {
-		panic(err)
-	}
+	client := GetElasticClient()
+	csv := RetrieveCache(client, request)
+
+	w.WriteHeader(http.StatusOK)
+	_, _ = fmt.Fprintln(w, csv)
 }

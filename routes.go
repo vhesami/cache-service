@@ -5,7 +5,7 @@ import "net/http"
 type Route struct {
 	Name            string
 	Path            string
-	Methods         string
+	Method          string
 	HandlerFunction http.HandlerFunc
 }
 
@@ -15,19 +15,19 @@ var routes = Routes{
 	Route{
 		Name:            "Index",
 		Path:            "/",
-		Methods:         "GET",
-		HandlerFunction: Index,
+		Method:          "GET",
+		HandlerFunction: IndexHandler,
 	},
 	Route{
-		Name:            "StoreQuery",
-		Path:            "/query",
-		Methods:         "POST",
-		HandlerFunction: StoreQuery,
+		Name:            "StoreCache",
+		Path:            "/store",
+		Method:          "POST",
+		HandlerFunction: StoreHandler,
 	},
 	Route{
-		Name:            "FetchCache",
-		Path:            "/query",
-		Methods:         "GET/{user_id}/{time}/{count}",
-		HandlerFunction: FetchCache,
+		Name:            "RetrieveCache",
+		Path:            "/retrieve",
+		Method:          "POST",
+		HandlerFunction: RetrieveHandler,
 	},
 }
