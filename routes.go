@@ -20,13 +20,13 @@ var routes = Routes{
 	},
 	Route{
 		Name:            "StoreCache",
-		Path:            "/store",
+		Path:            "/cache/api/v1/store",
 		Method:          "POST",
 		HandlerFunction: StoreHandler,
 	},
 	Route{
 		Name:            "RetrieveCache",
-		Path:            "/retrieve",
+		Path:            "/cache/api/v1/retrieve",
 		Method:          "POST",
 		HandlerFunction: RetrieveHandler,
 	},

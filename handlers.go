@@ -7,13 +7,12 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"time"
 )
 
 // Health check api
 // Returns response when app is running
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	_, _ = fmt.Fprintf(w, "IP: %s and Time: %s\r\n", r.RemoteAddr, time.Now().Format("2006-01-02 15:04:05.000"))
+	_, _ = fmt.Fprintf(w, "IP: %s and Time: %s\r\n", r.RemoteAddr, GetCurrentLocalTime().Format("2006-01-02 15:04:05.000"))
 }
 
 // This rest api provides storing user queries in cache
