@@ -2,11 +2,9 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/olivere/elastic"
 	"log"
-	"strings"
 	"sync"
 	"time"
 )
@@ -170,18 +168,18 @@ func createFetchQuery(query RetrieveRequest) *elastic.BoolQuery {
 }
 func toCsv(searchResult *elastic.SearchResult, delimiter string) string {
 	csv := ""
-	var tokens []string
+	//var tokens []string
 
-	for _, hit := range searchResult.Hits.Hits {
-		var token Token
-		err := json.Unmarshal(hit.Source, &token)
-		if err != nil {
-			log.Printf("toCsv() ERROR: %v\r\n", err)
-		}
-		tokens = append(tokens, token.Token)
-	}
-	if len(tokens) > 0 {
-		csv = strings.Join(tokens, delimiter)
-	}
+	//for _, hit := range searchResult.Hits.Hits {
+	//	var token Token
+	//err := json.Unmarshal(hit.Source, &token)
+	//if err != nil {
+	//	log.Printf("toCsv() ERROR: %v\r\n", err)
+	//}
+	//tokens = append(tokens, token.Token)
+	//}
+	//if len(tokens) > 0 {
+	//	csv = strings.Join(tokens, delimiter)
+	//}
 	return csv
 }
